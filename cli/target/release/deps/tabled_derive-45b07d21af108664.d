@@ -1,0 +1,9 @@
+/Users/green/Library/Mobile Documents/com~apple~CloudDocs/GITProjects/pgtimewarp/cli/target/release/deps/tabled_derive-45b07d21af108664.d: /Users/green/.cargo/registry/src/index.crates.io-1949cf8c6b5b557f/tabled_derive-0.6.0/src/lib.rs /Users/green/.cargo/registry/src/index.crates.io-1949cf8c6b5b557f/tabled_derive-0.6.0/src/attributes.rs /Users/green/.cargo/registry/src/index.crates.io-1949cf8c6b5b557f/tabled_derive-0.6.0/src/casing_style.rs /Users/green/.cargo/registry/src/index.crates.io-1949cf8c6b5b557f/tabled_derive-0.6.0/src/error.rs /Users/green/.cargo/registry/src/index.crates.io-1949cf8c6b5b557f/tabled_derive-0.6.0/src/parse.rs
+
+/Users/green/Library/Mobile Documents/com~apple~CloudDocs/GITProjects/pgtimewarp/cli/target/release/deps/libtabled_derive-45b07d21af108664.dylib: /Users/green/.cargo/registry/src/index.crates.io-1949cf8c6b5b557f/tabled_derive-0.6.0/src/lib.rs /Users/green/.cargo/registry/src/index.crates.io-1949cf8c6b5b557f/tabled_derive-0.6.0/src/attributes.rs /Users/green/.cargo/registry/src/index.crates.io-1949cf8c6b5b557f/tabled_derive-0.6.0/src/casing_style.rs /Users/green/.cargo/registry/src/index.crates.io-1949cf8c6b5b557f/tabled_derive-0.6.0/src/error.rs /Users/green/.cargo/registry/src/index.crates.io-1949cf8c6b5b557f/tabled_derive-0.6.0/src/parse.rs
+
+/Users/green/.cargo/registry/src/index.crates.io-1949cf8c6b5b557f/tabled_derive-0.6.0/src/lib.rs:
+/Users/green/.cargo/registry/src/index.crates.io-1949cf8c6b5b557f/tabled_derive-0.6.0/src/attributes.rs:
+/Users/green/.cargo/registry/src/index.crates.io-1949cf8c6b5b557f/tabled_derive-0.6.0/src/casing_style.rs:
+/Users/green/.cargo/registry/src/index.crates.io-1949cf8c6b5b557f/tabled_derive-0.6.0/src/error.rs:
+/Users/green/.cargo/registry/src/index.crates.io-1949cf8c6b5b557f/tabled_derive-0.6.0/src/parse.rs:

@@ -32,22 +32,18 @@ impl StoreManager {
     }
     
     pub async fn client(&self) -> Result<Client> {
-        let client_opt = self.client.read().await.clone();
-        if let Some(client) = client_opt {
-            Ok(client)
-        } else {
-            let (client, connection) = tokio_postgres::connect(&self.dsn, NoTls)
-                .await?;
-            
-            tokio::spawn(async move {
-                if let Err(e) = connection.await {
-                    eprintln!("store connection error: {}", e);
-                }
-            });
-            
-            *self.client.write().await = Some(client.clone());
-            Ok(client)
-        }
+        // Create a new connection each time
+        // tokio-postgres Client doesn't implement Clone
+        let (client, connection) = tokio_postgres::connect(&self.dsn, NoTls)
+            .await?;
+        
+        tokio::spawn(async move {
+            if let Err(e) = connection.await {
+                eprintln!("store connection error: {}", e);
+            }
+        });
+        
+        Ok(client)
     }
     
     pub async fn upsert_node(&self, node_id: &str, agent_version: &str) -> Result<()> {

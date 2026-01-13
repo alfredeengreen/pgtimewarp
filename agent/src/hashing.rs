@@ -18,23 +18,28 @@ pub fn encode_pk_canonical(pk_cols: &[String], pk_values: &serde_json::Value) ->
         
         if let Some(val) = pk_values.get(col) {
             let val_str = match val {
-                serde_json::Value::Null => "null",
-                serde_json::Value::Bool(b) => if *b { "true" } else { "false" },
+                serde_json::Value::Null => "null".to_string(),
+                serde_json::Value::Bool(b) => if *b { "true".to_string() } else { "false".to_string() },
                 serde_json::Value::Number(n) => {
                     if let Some(i) = n.as_i64() {
-                        format!("{}", i).as_str()
+                        i.to_string()
                     } else if let Some(f) = n.as_f64() {
-                        format!("{}", f).as_str()
+                        f.to_string()
                     } else {
-                        n.to_string().as_str()
+                        n.to_string()
                     }
                 },
-                serde_json::Value::String(s) => s.as_str(),
-                _ => val.to_string().as_str(),
+                serde_json::Value::String(s) => s.clone(),
+                _ => val.to_string(),
             };
             buf.extend_from_slice(val_str.as_bytes());
         }
     }
     
     buf
+}
+
+pub fn compute_pk_hash(pk_cols: &[String], pk_values: &serde_json::Value) -> i64 {
+    let canonical = encode_pk_canonical(pk_cols, pk_values);
+    hash_pk(&canonical)
 }

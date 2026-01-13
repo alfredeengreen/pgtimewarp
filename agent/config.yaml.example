@@ -1,0 +1,53 @@
+# pgtimewarp agent configuration example
+# Copy this file to config.yaml and adjust values for your environment
+
+# Unique identifier for this agent instance
+node_id: "prod-eu-1"
+
+# Agent version for tracking
+agent_version: "0.1.0"
+
+# Source database configuration (database being observed)
+source:
+  # Connection string for source database
+  # Requires a user with REPLICATION privileges
+  dsn: "postgres://pgtimewarp_replication:secure_password@localhost:5432/your_database"
+  
+  # Logical replication slot name
+  # Must be unique per agent instance
+  slot_name: "pgtimewarp_prod_eu_1"
+  
+  # Replication plugin (wal2json for MVP)
+  plugin: "wal2json"
+  
+  # wal2json-specific options
+  wal2json_options:
+    include_lsn: true
+    include_timestamp: true
+    include_typmod: false
+    include_pk: true
+    pretty_print: false
+    write_in_chunks: false
+    include_old: true
+
+# Store database configuration (where historical data is stored)
+store:
+  # Connection string for store database
+  # Requires a user with INSERT/UPDATE privileges on pgtimewarp schema
+  dsn: "postgres://pgtimewarp_writer:secure_password@localhost:5432/pgtimewarp"
+
+# Timing intervals (in seconds)
+intervals:
+  # How often to refresh the list of tracked tables
+  refresh_tracked_s: 30
+  
+  # How often to run retention cleanup jobs
+  retention_s: 300
+
+# Processing limits
+limits:
+  # Number of row versions to batch together for writes
+  batch_size: 500
+  
+  # Maximum queue size before applying backpressure
+  max_queue: 100000

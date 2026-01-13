@@ -1,0 +1,161 @@
+name: CI
+
+on:
+  push:
+    branches: [ main, develop ]
+  pull_request:
+    branches: [ main ]
+
+jobs:
+  test-agent:
+    name: Test Agent
+    runs-on: ubuntu-latest
+    
+    steps:
+    - uses: actions/checkout@v3
+    
+    - name: Install Rust
+      uses: actions-rs/toolchain@v1
+      with:
+        toolchain: stable
+        override: true
+    
+    - name: Cache cargo registry
+      uses: actions/cache@v3
+      with:
+        path: ~/.cargo/registry
+        key: ${{ runner.os }}-cargo-registry-${{ hashFiles('**/Cargo.lock') }}
+    
+    - name: Cache cargo index
+      uses: actions/cache@v3
+      with:
+        path: ~/.cargo/git
+        key: ${{ runner.os }}-cargo-index-${{ hashFiles('**/Cargo.lock') }}
+    
+    - name: Cache cargo build
+      uses: actions/cache@v3
+      with:
+        path: agent/target
+        key: ${{ runner.os }}-cargo-build-target-${{ hashFiles('**/Cargo.lock') }}
+    
+    - name: Build agent
+      working-directory: ./agent
+      run: cargo build --verbose
+    
+    - name: Check agent
+      working-directory: ./agent
+      run: cargo check --verbose
+    
+    - name: Run agent tests
+      working-directory: ./agent
+      run: cargo test --verbose
+
+  test-cli:
+    name: Test CLI
+    runs-on: ubuntu-latest
+    
+    steps:
+    - uses: actions/checkout@v3
+    
+    - name: Install Rust
+      uses: actions-rs/toolchain@v1
+      with:
+        toolchain: stable
+        override: true
+    
+    - name: Cache cargo registry
+      uses: actions/cache@v3
+      with:
+        path: ~/.cargo/registry
+        key: ${{ runner.os }}-cargo-registry-${{ hashFiles('**/Cargo.lock') }}
+    
+    - name: Cache cargo build
+      uses: actions/cache@v3
+      with:
+        path: cli/target
+        key: ${{ runner.os }}-cargo-build-target-${{ hashFiles('**/Cargo.lock') }}
+    
+    - name: Build CLI
+      working-directory: ./cli
+      run: cargo build --verbose
+    
+    - name: Check CLI
+      working-directory: ./cli
+      run: cargo check --verbose
+    
+    - name: Run CLI tests
+      working-directory: ./cli
+      run: cargo test --verbose
+
+  test-extension:
+    name: Test Extension
+    runs-on: ubuntu-latest
+    
+    services:
+      postgres:
+        image: postgres:15
+        env:
+          POSTGRES_PASSWORD: postgres
+        options: >-
+          --health-cmd pg_isready
+          --health-interval 10s
+          --health-timeout 5s
+          --health-retries 5
+        ports:
+          - 5432:5432
+    
+    steps:
+    - uses: actions/checkout@v3
+    
+    - name: Install PostgreSQL development headers
+      run: |
+        sudo apt-get update
+        sudo apt-get install -y postgresql-server-dev-15
+    
+    - name: Build extension
+      working-directory: ./ext
+      run: make
+    
+    - name: Install extension
+      working-directory: ./ext
+      run: sudo make install
+    
+    - name: Test SQL migrations
+      run: |
+        PGPASSWORD=postgres psql -h localhost -U postgres -c "CREATE DATABASE pgtimewarp_test;"
+        PGPASSWORD=postgres psql -h localhost -U postgres -d pgtimewarp_test -f store/migrations/001_init.sql
+        PGPASSWORD=postgres psql -h localhost -U postgres -d pgtimewarp_test -f store/migrations/002_indexes.sql
+        PGPASSWORD=postgres psql -h localhost -U postgres -d pgtimewarp_test -f store/migrations/003_roles_grants.sql
+        PGPASSWORD=postgres psql -h localhost -U postgres -d pgtimewarp_test -f store/migrations/004_retention.sql
+    
+    - name: Test extension creation
+      run: |
+        PGPASSWORD=postgres psql -h localhost -U postgres -d pgtimewarp_test -c "CREATE EXTENSION pgtimewarp;"
+        PGPASSWORD=postgres psql -h localhost -U postgres -d pgtimewarp_test -c "SELECT * FROM pg_extension WHERE extname = 'pgtimewarp';"
+
+  lint:
+    name: Lint
+    runs-on: ubuntu-latest
+    
+    steps:
+    - uses: actions/checkout@v3
+    
+    - name: Install Rust
+      uses: actions-rs/toolchain@v1
+      with:
+        toolchain: stable
+        components: rustfmt, clippy
+        override: true
+    
+    - name: Run rustfmt
+      run: |
+        cargo fmt --manifest-path agent/Cargo.toml -- --check
+        cargo fmt --manifest-path cli/Cargo.toml -- --check
+    
+    - name: Run clippy on agent
+      working-directory: ./agent
+      run: cargo clippy -- -D warnings
+    
+    - name: Run clippy on CLI
+      working-directory: ./cli
+      run: cargo clippy -- -D warnings

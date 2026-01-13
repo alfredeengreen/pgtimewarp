@@ -1,6 +1,7 @@
 use anyhow::Result;
 use clap::Parser;
 use std::path::PathBuf;
+use std::sync::Arc;
 use tracing::{info, error};
 
 mod config;

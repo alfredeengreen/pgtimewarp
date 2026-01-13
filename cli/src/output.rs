@@ -5,7 +5,12 @@ pub fn print_json(value: &Value) {
 }
 
 pub fn print_table(headers: Vec<&str>, rows: Vec<Vec<String>>) {
-    use tabled::{Table, Tabled};
+    // Print headers
+    println!("{}", headers.join(" | "));
+    println!("{}", "-".repeat(headers.len() * 15));
     
-    println!("{}", Table::new(rows).with(tabled::settings::Style::modern()));
+    // Print rows
+    for row in rows {
+        println!("{}", row.join(" | "));
+    }
 }
