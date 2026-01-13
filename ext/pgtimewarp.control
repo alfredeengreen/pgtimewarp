@@ -1,0 +1,4 @@
+comment = 'PostgreSQL time travel extension'
+default_version = '0.1'
+module_pathname = '$libdir/pgtimewarp'
+relocatable = true

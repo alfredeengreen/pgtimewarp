@@ -1,0 +1,55 @@
+version: '3.8'
+
+services:
+  source_db:
+    image: postgres:15
+    environment:
+      POSTGRES_DB: sourcedb
+      POSTGRES_USER: postgres
+      POSTGRES_PASSWORD: postgres
+      POSTGRES_INITDB_ARGS: "-c wal_level=logical"
+    ports:
+      - "5432:5432"
+    volumes:
+      - source_data:/var/lib/postgresql/data
+    command: postgres -c wal_level=logical -c max_replication_slots=10 -c max_wal_senders=10
+
+  store_db:
+    image: postgres:15
+    environment:
+      POSTGRES_DB: pgtimewarp
+      POSTGRES_USER: postgres
+      POSTGRES_PASSWORD: postgres
+    ports:
+      - "5433:5432"
+    volumes:
+      - store_data:/var/lib/postgresql/data
+      - ./store/migrations:/docker-entrypoint-initdb.d
+
+  agent:
+    build:
+      context: ./agent
+      dockerfile: Dockerfile
+    environment:
+      PGTIMEWARP_NODE_ID: "dev-1"
+      PGTIMEWARP_AGENT_VERSION: "0.1.0"
+      PGTIMEWARP_SOURCE_DSN: "postgres://postgres:postgres@source_db:5432/sourcedb"
+      PGTIMEWARP_STORE_DSN: "postgres://postgres:postgres@store_db:5432/pgtimewarp"
+    depends_on:
+      - source_db
+      - store_db
+    volumes:
+      - ./agent/config.yaml:/app/config.yaml
+
+  cli:
+    build:
+      context: ./cli
+      dockerfile: Dockerfile
+    environment:
+      PGTIMEWARP_STORE_DSN: "postgres://postgres:postgres@store_db:5432/pgtimewarp"
+    depends_on:
+      - store_db
+
+volumes:
+  source_data:
+  store_data:
