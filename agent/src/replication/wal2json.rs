@@ -7,6 +7,7 @@ use chrono::{DateTime, Utc};
 use serde_json::Value;
 
 pub struct Wal2JsonDecoder {
+    #[allow(dead_code)]
     options: Wal2JsonOptions,
 }
 
@@ -15,7 +16,7 @@ impl Wal2JsonDecoder {
         let options = config
             .wal2json_options
             .clone()
-            .unwrap_or_else(|| SourceConfig::default_wal2json_options());
+            .unwrap_or_else(SourceConfig::default_wal2json_options);
 
         Ok(Self { options })
     }

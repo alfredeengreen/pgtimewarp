@@ -11,6 +11,7 @@ use tokio_postgres::{Client, NoTls};
 #[derive(Clone)]
 pub struct StoreManager {
     dsn: String,
+    #[allow(dead_code)]
     client: Arc<RwLock<Option<Client>>>,
 }
 

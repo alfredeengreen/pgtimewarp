@@ -1,6 +1,7 @@
 use anyhow::Result;
 use tokio_postgres::Client;
 
+#[allow(dead_code)]
 pub async fn upsert_node(client: &Client, node_id: &str, agent_version: &str) -> Result<()> {
     client
         .execute(

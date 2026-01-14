@@ -4,6 +4,7 @@ pub fn now() -> DateTime<Utc> {
     Utc::now()
 }
 
+#[allow(dead_code)]
 pub fn parse_pg_lsn(lsn: &str) -> Option<u64> {
     let parts: Vec<&str> = lsn.split('/').collect();
     if parts.len() != 2 {
@@ -16,6 +17,7 @@ pub fn parse_pg_lsn(lsn: &str) -> Option<u64> {
     Some((high << 32) | low)
 }
 
+#[allow(dead_code)]
 pub fn format_pg_lsn(lsn: u64) -> String {
     let high = lsn >> 32;
     let low = lsn & 0xFFFFFFFF;

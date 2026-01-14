@@ -1,6 +1,7 @@
 use anyhow::Result;
 use tokio_postgres::Client;
 
+#[allow(dead_code)]
 pub async fn write_mapping(client: &Client, node_id: &str, lsn: &str) -> Result<()> {
     client
         .execute(

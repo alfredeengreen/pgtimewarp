@@ -1,8 +1,10 @@
+#[allow(dead_code)]
 pub struct Backpressure {
     max_queue: usize,
     current_queue: usize,
 }
 
+#[allow(dead_code)]
 impl Backpressure {
     pub fn new(max_queue: usize) -> Self {
         Self {

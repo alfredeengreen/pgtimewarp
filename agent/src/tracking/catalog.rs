@@ -7,6 +7,7 @@ use std::sync::Arc;
 pub struct TrackedRelation {
     pub relid: Option<u32>,
     pub pk_cols: Vec<String>,
+    #[allow(dead_code)]
     pub pk_strategy: i16,
 }
 
@@ -14,7 +15,9 @@ pub struct Catalog {
     store: Arc<StoreManager>,
     node_id: String,
     relations: HashMap<(String, String), TrackedRelation>,
+    #[allow(dead_code)]
     source_client: Option<tokio_postgres::Client>,
+    #[allow(dead_code)]
     source_dsn: Option<String>,
 }
 

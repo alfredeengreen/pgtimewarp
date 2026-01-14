@@ -67,7 +67,7 @@ impl Writer {
                     &version.valid_from_ts,
                     &version.valid_to_ts,
                     &version.valid_from_lsn,
-                    &version.valid_to_lsn.as_ref().map(|s| s.as_str()),
+                    &version.valid_to_lsn.as_deref(),
                     &version.op.as_i16(),
                     &version.row_data,
                     &version.txid,

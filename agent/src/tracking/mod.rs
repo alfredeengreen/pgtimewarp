@@ -9,7 +9,9 @@ use tokio::sync::RwLock;
 
 #[derive(Clone)]
 pub struct TrackingManager {
+    #[allow(dead_code)]
     store: Arc<StoreManager>,
+    #[allow(dead_code)]
     node_id: String,
     catalog: Arc<RwLock<catalog::Catalog>>,
 }
