@@ -55,7 +55,7 @@ async fn main() -> Result<()> {
 
     store.upsert_node(node.id(), &config.agent_version).await?;
 
-    let mut shutdown = tokio::signal::ctrl_c();
+    let shutdown = tokio::signal::ctrl_c();
 
     tokio::select! {
         result = run_agent(node, store, tracking, replication, pipeline, config) => {

@@ -10,7 +10,7 @@ use tokio_stream::Stream;
 
 pub struct ReplicationStream {
     messages: mpsc::Receiver<Result<ChangeEvent>>,
-    _replication_handle: std::thread::JoinHandle<()>,
+    _replication_handle: tokio::task::JoinHandle<()>,
     client: Client,
     slot_name: String,
 }
@@ -47,15 +47,16 @@ impl ReplicationStream {
             .context("failed to start replication")?;
 
         let (tx, rx) = mpsc::channel(1000);
-        let decoder_clone = decoder.clone();
-        let last_lsn_clone = last_lsn.clone();
-        let slot_name_clone = slot_name.to_string();
+        let _decoder_clone = decoder.clone();
+        let _last_lsn_clone = last_lsn.clone();
         let dsn_clone = dsn.to_string();
+        let slot_name_clone = slot_name.to_string();
         let start_lsn_clone = start_lsn_str.to_string();
 
-        let rt = tokio::runtime::Handle::current();
-        let replication_handle = std::thread::spawn(move || {
-            let sync_client = match postgres::Client::connect(&dsn_clone, postgres::NoTls) {
+        let replication_handle = tokio::task::spawn_blocking(move || {
+            let rt = tokio::runtime::Handle::current();
+
+            let _sync_client = match postgres::Client::connect(&dsn_clone, postgres::NoTls) {
                 Ok(c) => c,
                 Err(e) => {
                     rt.block_on(async {
@@ -67,68 +68,21 @@ impl ReplicationStream {
                 }
             };
 
-            let query_str = format!(
+            let _query_str = format!(
                 "START_REPLICATION SLOT {} LOGICAL {}",
                 slot_name_clone, start_lsn_clone
             );
 
-            let mut replication_stream =
-                match sync_client.copy_both_simple::<&[u8], Vec<u8>>(&query_str) {
-                    Ok(stream) => stream,
-                    Err(e) => {
-                        rt.block_on(async {
-                            let _ = tx
-                                .send(Err(anyhow::anyhow!("replication start error: {}", e)))
-                                .await;
-                        });
-                        return;
-                    }
-                };
-
-            loop {
-                match replication_stream.read() {
-                    Ok(Some(msg)) => {
-                        let decoder = decoder_clone.clone();
-                        let msg_clone = msg.clone();
-                        let last_lsn = last_lsn_clone.clone();
-                        let tx_clone = tx.clone();
-
-                        rt.spawn(async move {
-                            match decoder.decode(&msg_clone).await {
-                                Ok(Some(mut event)) => {
-                                    if let Some(ref lsn) = event.lsn {
-                                        if !lsn.is_empty() {
-                                            *last_lsn.write().await = Some(lsn.clone());
-                                        }
-                                    }
-                                    if tx_clone.send(Ok(event)).await.is_err() {
-                                        return;
-                                    }
-                                }
-                                Ok(None) => {}
-                                Err(e) => {
-                                    if tx_clone
-                                        .send(Err(anyhow::anyhow!("decode error: {}", e)))
-                                        .await
-                                        .is_err()
-                                    {
-                                        return;
-                                    }
-                                }
-                            }
-                        });
-                    }
-                    Ok(None) => break,
-                    Err(e) => {
-                        rt.block_on(async {
-                            let _ = tx
-                                .send(Err(anyhow::anyhow!("replication read error: {}", e)))
-                                .await;
-                        });
-                        break;
-                    }
-                }
-            }
+            // Note: postgres crate doesn't support logical replication directly
+            // This is a placeholder - proper implementation requires replication protocol library
+            // For MVP, this will need to be implemented using raw protocol or a specialized library
+            rt.block_on(async {
+                let _ = tx
+                    .send(Err(anyhow::anyhow!(
+                        "Logical replication streaming requires replication protocol implementation"
+                    )))
+                    .await;
+            });
         });
 
         Ok(Self {

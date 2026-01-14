@@ -9,7 +9,6 @@ pub use slot::SlotManager;
 pub use stream::ReplicationStream;
 
 use crate::config::SourceConfig;
-use crate::models::ChangeEvent;
 use anyhow::Result;
 use std::sync::Arc;
 use tokio::sync::RwLock;

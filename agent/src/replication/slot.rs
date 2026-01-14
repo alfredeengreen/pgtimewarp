@@ -1,6 +1,6 @@
 use crate::config::SourceConfig;
 use anyhow::{Context, Result};
-use tokio_postgres::{Client, NoTls};
+use tokio_postgres::NoTls;
 
 pub struct SlotManager {
     config: SourceConfig,

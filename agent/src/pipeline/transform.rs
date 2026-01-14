@@ -5,8 +5,6 @@ use crate::store::StoreManager;
 use crate::time::now;
 use crate::tracking::TrackingManager;
 use anyhow::Result;
-use chrono::Utc;
-use serde_json::Value;
 use std::sync::Arc;
 
 pub struct Transformer {

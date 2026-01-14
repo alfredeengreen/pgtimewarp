@@ -2,7 +2,6 @@ use crate::store::StoreManager;
 use anyhow::Result;
 use std::collections::HashMap;
 use std::sync::Arc;
-use tokio_postgres::NoTls;
 
 #[derive(Clone)]
 pub struct TrackedRelation {

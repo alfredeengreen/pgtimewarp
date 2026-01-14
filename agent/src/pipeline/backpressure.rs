@@ -1,5 +1,3 @@
-use anyhow::Result;
-
 pub struct Backpressure {
     max_queue: usize,
     current_queue: usize,

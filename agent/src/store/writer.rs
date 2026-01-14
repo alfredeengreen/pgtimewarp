@@ -1,6 +1,5 @@
 use crate::models::{Operation, RowVersion};
 use anyhow::Result;
-use chrono::Utc;
 use tokio_postgres::Client;
 
 pub struct Writer {
@@ -33,7 +32,7 @@ impl Writer {
             return Ok(());
         }
 
-        let mut tx = self.client.transaction().await?;
+        let tx = self.client.transaction().await?;
 
         for version in &self.batch {
             if version.op != Operation::Insert {

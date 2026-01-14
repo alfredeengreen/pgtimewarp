@@ -8,8 +8,8 @@ use anyhow::Result;
 use std::sync::Arc;
 
 pub struct Pipeline {
-    store: Arc<StoreManager>,
-    tracking: Arc<TrackingManager>,
+    _store: Arc<StoreManager>,
+    _tracking: Arc<TrackingManager>,
     transform: Arc<tokio::sync::Mutex<transform::Transformer>>,
 }
 
@@ -26,8 +26,8 @@ impl Pipeline {
         )));
 
         Self {
-            store,
-            tracking,
+            _store: store,
+            _tracking: tracking,
             transform,
         }
     }
