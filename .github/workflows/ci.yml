@@ -145,12 +145,26 @@ jobs:
     
     - name: Install extension in container
       run: |
+        # Find the PostgreSQL container (GitHub Actions service)
+        CONTAINER_ID=$(docker ps -q -f ancestor=postgres:15 | head -1)
+        if [ -z "$CONTAINER_ID" ]; then
+          echo "PostgreSQL container not found"
+          exit 1
+        fi
+        echo "Found PostgreSQL container: $CONTAINER_ID"
         # Copy extension files into the PostgreSQL container
-        # The extension needs to be available to the PostgreSQL server running in Docker
-        docker cp ext/pgtimewarp.control $(docker ps -q -f ancestor=postgres:15):/usr/share/postgresql/15/extension/
-        docker cp ext/sql/pgtimewarp--0.1.sql $(docker ps -q -f ancestor=postgres:15):/usr/share/postgresql/15/extension/
-        # Copy the compiled shared library
-        docker cp ext/pgtimewarp.so $(docker ps -q -f ancestor=postgres:15):/usr/lib/postgresql/15/lib/ 2>/dev/null || echo "Shared library not found, extension may be SQL-only"
+        docker exec $CONTAINER_ID mkdir -p /usr/share/postgresql/15/extension
+        docker exec $CONTAINER_ID mkdir -p /usr/lib/postgresql/15/lib
+        docker cp ext/pgtimewarp.control $CONTAINER_ID:/usr/share/postgresql/15/extension/
+        docker cp ext/sql/pgtimewarp--0.1.sql $CONTAINER_ID:/usr/share/postgresql/15/extension/
+        # Copy the compiled shared library if it exists
+        if [ -f ext/pgtimewarp.so ]; then
+          docker cp ext/pgtimewarp.so $CONTAINER_ID:/usr/lib/postgresql/15/lib/
+        else
+          echo "Shared library not found, extension may be SQL-only"
+        fi
+        # Verify files were copied
+        docker exec $CONTAINER_ID ls -la /usr/share/postgresql/15/extension/pgtimewarp*
     
     - name: Test SQL migrations
       run: |
