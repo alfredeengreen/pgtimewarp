@@ -12,18 +12,18 @@ impl SlotManager {
             config: config.clone(),
         })
     }
-    
+
     pub async fn ensure_slot(&self) -> Result<()> {
         let (client, connection) = tokio_postgres::connect(&self.config.dsn, NoTls)
             .await
             .context("failed to connect to source database")?;
-        
+
         tokio::spawn(async move {
             if let Err(e) = connection.await {
                 eprintln!("connection error: {}", e);
             }
         });
-        
+
         let slot_exists = client
             .query_one(
                 "SELECT EXISTS(SELECT 1 FROM pg_replication_slots WHERE slot_name = $1)",
@@ -31,12 +31,12 @@ impl SlotManager {
             )
             .await
             .context("failed to check replication slot")?;
-        
+
         let exists: bool = slot_exists.get(0);
-        
+
         if !exists {
             let mut slot_options = Vec::new();
-            
+
             if self.config.plugin == "wal2json" {
                 if let Some(opts) = &self.config.wal2json_options {
                     if opts.include_lsn {
@@ -62,38 +62,38 @@ impl SlotManager {
                     }
                 }
             }
-            
+
             let options_str = if slot_options.is_empty() {
                 String::new()
             } else {
                 format!("WITH ({})", slot_options.join(", "))
             };
-            
+
             let query = format!(
                 "SELECT pg_create_logical_replication_slot($1, $2 {})",
                 options_str
             );
-            
+
             client
                 .execute(&query, &[&self.config.slot_name, &self.config.plugin])
                 .await
                 .context("failed to create replication slot")?;
         }
-        
+
         Ok(())
     }
-    
+
     pub async fn get_last_lsn(&self, store_dsn: &str) -> Result<Option<String>> {
         let (client, connection) = tokio_postgres::connect(store_dsn, NoTls)
             .await
             .context("failed to connect to store database")?;
-        
+
         tokio::spawn(async move {
             if let Err(e) = connection.await {
                 eprintln!("connection error: {}", e);
             }
         });
-        
+
         let row = client
             .query_opt(
                 "SELECT last_lsn FROM pgtimewarp.wal_checkpoints WHERE node_id = $1",
@@ -101,7 +101,7 @@ impl SlotManager {
             )
             .await
             .context("failed to query last LSN")?;
-        
+
         if let Some(row) = row {
             let lsn: Option<String> = row.get(0);
             Ok(lsn)

@@ -1,10 +1,10 @@
 use anyhow::Result;
 use clap::{Parser, Subcommand};
 
-mod config;
-mod store;
-mod output;
 mod commands;
+mod config;
+mod output;
+mod store;
 
 use config::Config;
 use store::Store;
@@ -15,7 +15,7 @@ use store::Store;
 struct Cli {
     #[command(subcommand)]
     command: Commands,
-    
+
     #[arg(short, long, env = "PGTIMEWARP_STORE_DSN")]
     store_dsn: Option<String>,
 }
@@ -69,15 +69,20 @@ enum Commands {
 #[tokio::main]
 async fn main() -> Result<()> {
     let cli = Cli::parse();
-    
+
     let config = Config::load(cli.store_dsn)?;
     let store = Store::new(&config.store_dsn).await?;
-    
+
     match cli.command {
         Commands::Doctor { node } => {
             commands::doctor::run(&store, node.as_deref()).await?;
         }
-        Commands::Track { table, pk, retention, node } => {
+        Commands::Track {
+            table,
+            pk,
+            retention,
+            node,
+        } => {
             commands::track::run(&store, &table, &pk, retention, &node).await?;
         }
         Commands::Untrack { table, node } => {
@@ -86,13 +91,24 @@ async fn main() -> Result<()> {
         Commands::Status { node } => {
             commands::status::run(&store, node.as_deref()).await?;
         }
-        Commands::AsOf { table, pk, at, node } => {
+        Commands::AsOf {
+            table,
+            pk,
+            at,
+            node,
+        } => {
             commands::asof::run(&store, &table, &pk, &at, &node).await?;
         }
-        Commands::Diff { table, pk, from, to, node } => {
+        Commands::Diff {
+            table,
+            pk,
+            from,
+            to,
+            node,
+        } => {
             commands::diff::run(&store, &table, &pk, &from, &to, &node).await?;
         }
     }
-    
+
     Ok(())
 }

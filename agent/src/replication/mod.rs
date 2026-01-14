@@ -1,12 +1,12 @@
+pub mod decode;
+pub mod pgoutput;
 pub mod slot;
 pub mod stream;
-pub mod decode;
 pub mod wal2json;
-pub mod pgoutput;
 
+pub use decode::Decoder;
 pub use slot::SlotManager;
 pub use stream::ReplicationStream;
-pub use decode::Decoder;
 
 use crate::config::SourceConfig;
 use crate::models::ChangeEvent;
@@ -30,7 +30,7 @@ impl ReplicationManager {
             "pgoutput" => Arc::new(pgoutput::PgOutputDecoder::new(source_config)?),
             _ => anyhow::bail!("unsupported replication plugin: {}", source_config.plugin),
         };
-        
+
         Ok(Self {
             source_config: Arc::new(source_config.clone()),
             store_dsn: store_dsn.to_string(),
@@ -39,11 +39,11 @@ impl ReplicationManager {
             last_lsn: Arc::new(RwLock::new(None)),
         })
     }
-    
+
     pub async fn ensure_slot(&self) -> Result<()> {
         self.slot_manager.ensure_slot().await
     }
-    
+
     pub async fn start_stream(&self) -> Result<ReplicationStream> {
         let last_lsn = self.slot_manager.get_last_lsn(&self.store_dsn).await?;
         let stream = ReplicationStream::new(
@@ -53,10 +53,11 @@ impl ReplicationManager {
             last_lsn,
             self.decoder.clone(),
             self.last_lsn.clone(),
-        ).await?;
+        )
+        .await?;
         Ok(stream)
     }
-    
+
     pub async fn last_lsn(&self) -> Option<String> {
         self.last_lsn.read().await.clone()
     }

@@ -12,15 +12,15 @@ impl Backpressure {
             current_queue: 0,
         }
     }
-    
+
     pub fn should_degrade(&self) -> bool {
         self.current_queue >= self.max_queue
     }
-    
+
     pub fn increment(&mut self) {
         self.current_queue += 1;
     }
-    
+
     pub fn decrement(&mut self) {
         if self.current_queue > 0 {
             self.current_queue -= 1;

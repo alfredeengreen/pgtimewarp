@@ -7,12 +7,14 @@ pub async fn update_checkpoint(
     slot_name: &str,
     lsn: &str,
 ) -> Result<()> {
-    client.execute(
-        "INSERT INTO pgtimewarp.wal_checkpoints (node_id, slot_name, last_lsn, last_seen) 
+    client
+        .execute(
+            "INSERT INTO pgtimewarp.wal_checkpoints (node_id, slot_name, last_lsn, last_seen) 
          VALUES ($1, $2, $3::pg_lsn, now())
          ON CONFLICT (node_id) 
          DO UPDATE SET last_lsn = $3::pg_lsn, last_seen = now()",
-        &[&node_id, &slot_name, &lsn],
-    ).await?;
+            &[&node_id, &slot_name, &lsn],
+        )
+        .await?;
     Ok(())
 }

@@ -1,5 +1,5 @@
-pub mod transform;
 pub mod backpressure;
+pub mod transform;
 
 use crate::models::ChangeEvent;
 use crate::store::StoreManager;
@@ -20,17 +20,18 @@ impl Pipeline {
         _batch_size: usize,
         _max_queue: usize,
     ) -> Self {
-        let transform = Arc::new(tokio::sync::Mutex::new(
-            transform::Transformer::new(store.clone(), tracking.clone())
-        ));
-        
+        let transform = Arc::new(tokio::sync::Mutex::new(transform::Transformer::new(
+            store.clone(),
+            tracking.clone(),
+        )));
+
         Self {
             store,
             tracking,
             transform,
         }
     }
-    
+
     pub async fn process_change(&self, change: ChangeEvent) -> Result<()> {
         let mut transformer = self.transform.lock().await;
         transformer.transform(change).await

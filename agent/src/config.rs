@@ -1,6 +1,6 @@
 use anyhow::{Context, Result};
 use figment::{
-    providers::{Format, Yaml, Env},
+    providers::{Env, Format, Yaml},
     Figment,
 };
 use serde::{Deserialize, Serialize};
@@ -81,7 +81,6 @@ impl Config {
             .extract()
             .context("failed to load configuration")
     }
-    
 }
 
 impl SourceConfig {

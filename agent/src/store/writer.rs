@@ -17,24 +17,24 @@ impl Writer {
             batch_size,
         }
     }
-    
+
     pub async fn add(&mut self, version: RowVersion) -> Result<()> {
         self.batch.push(version);
-        
+
         if self.batch.len() >= self.batch_size {
             self.flush().await?;
         }
-        
+
         Ok(())
     }
-    
+
     pub async fn flush(&mut self) -> Result<()> {
         if self.batch.is_empty() {
             return Ok(());
         }
-        
+
         let mut tx = self.client.transaction().await?;
-        
+
         for version in &self.batch {
             if version.op != Operation::Insert {
                 tx.execute(
@@ -52,9 +52,10 @@ impl Writer {
                         &(version.relid as i32),
                         &version.pk_hash,
                     ],
-                ).await?;
+                )
+                .await?;
             }
-            
+
             tx.execute(
                 "INSERT INTO pgtimewarp.row_versions 
                  (node_id, relid, pk_hash, valid_from_ts, valid_to_ts, 
@@ -73,12 +74,13 @@ impl Writer {
                     &version.txid,
                     &version.confidence,
                 ],
-            ).await?;
+            )
+            .await?;
         }
-        
+
         tx.commit().await?;
         self.batch.clear();
-        
+
         Ok(())
     }
 }

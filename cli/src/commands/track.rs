@@ -1,24 +1,18 @@
 use crate::store::Store;
 use anyhow::{Context, Result};
 
-pub async fn run(
-    store: &Store,
-    table: &str,
-    pk: &str,
-    retention: u32,
-    node: &str,
-) -> Result<()> {
+pub async fn run(store: &Store, table: &str, pk: &str, retention: u32, node: &str) -> Result<()> {
     let parts: Vec<&str> = table.split('.').collect();
     if parts.len() != 2 {
         anyhow::bail!("table must be in format schema.table");
     }
-    
+
     let schema_name = parts[0];
     let table_name = parts[1];
     let pk_cols: Vec<String> = pk.split(',').map(|s| s.trim().to_string()).collect();
-    
+
     let client = store.client();
-    
+
     client.execute(
         "INSERT INTO pgtimewarp.tracked_relations 
          (node_id, schema_name, table_name, pk_cols, pk_strategy, replica_identity_full, status, retention_hours) 
@@ -36,8 +30,11 @@ pub async fn run(
             &(retention as i32),
         ],
     ).await?;
-    
-    println!("tracking {}.{} with primary key: {}", schema_name, table_name, pk);
-    
+
+    println!(
+        "tracking {}.{} with primary key: {}",
+        schema_name, table_name, pk
+    );
+
     Ok(())
 }

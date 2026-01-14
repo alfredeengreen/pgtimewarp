@@ -7,11 +7,9 @@ pub struct Node {
 
 impl Node {
     pub fn new(id: &str) -> Self {
-        Self {
-            id: Arc::from(id),
-        }
+        Self { id: Arc::from(id) }
     }
-    
+
     pub fn id(&self) -> &str {
         &self.id
     }

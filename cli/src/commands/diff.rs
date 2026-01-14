@@ -15,16 +15,17 @@ pub async fn run(
     if parts.len() != 2 {
         anyhow::bail!("table must be in format schema.table");
     }
-    
+
     let schema_name = parts[0];
     let table_name = parts[1];
     let from_ts: DateTime<chrono::Utc> = from.parse()?;
     let to_ts: DateTime<chrono::Utc> = to.parse()?;
-    
+
     let client = store.client();
-    
-    let rows = client.query(
-        "SELECT rv.row_data, rv.valid_from_ts, rv.valid_from_lsn, rv.op 
+
+    let rows = client
+        .query(
+            "SELECT rv.row_data, rv.valid_from_ts, rv.valid_from_lsn, rv.op 
          FROM pgtimewarp.row_versions rv
          JOIN pgtimewarp.tracked_relations tr 
            ON rv.node_id = tr.node_id AND rv.relid = tr.relid
@@ -42,9 +43,10 @@ pub async fn run(
                ORDER BY ts DESC LIMIT 1
            )::pg_lsn
          ORDER BY rv.valid_from_lsn",
-        &[&node, &schema_name, &table_name, &from_ts, &to_ts],
-    ).await?;
-    
+            &[&node, &schema_name, &table_name, &from_ts, &to_ts],
+        )
+        .await?;
+
     let mut versions = Vec::new();
     for row in rows {
         let row_data: Option<serde_json::Value> = row.get(0);
@@ -57,7 +59,7 @@ pub async fn run(
             2 => "delete",
             _ => "unknown",
         };
-        
+
         versions.push(json!({
             "op": op_str,
             "row": row_data,
@@ -65,12 +67,12 @@ pub async fn run(
             "valid_from_lsn": valid_from_lsn,
         }));
     }
-    
+
     let result = json!({
         "versions": versions,
     });
-    
+
     println!("{}", serde_json::to_string_pretty(&result)?);
-    
+
     Ok(())
 }

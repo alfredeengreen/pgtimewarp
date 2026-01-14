@@ -8,7 +8,7 @@ pub fn print_table(headers: Vec<&str>, rows: Vec<Vec<String>>) {
     // Print headers
     println!("{}", headers.join(" | "));
     println!("{}", "-".repeat(headers.len() * 15));
-    
+
     // Print rows
     for row in rows {
         println!("{}", row.join(" | "));

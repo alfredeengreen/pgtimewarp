@@ -12,9 +12,11 @@ pub struct Wal2JsonDecoder {
 
 impl Wal2JsonDecoder {
     pub fn new(config: &SourceConfig) -> Result<Self> {
-        let options = config.wal2json_options.clone()
+        let options = config
+            .wal2json_options
+            .clone()
             .unwrap_or_else(|| SourceConfig::default_wal2json_options());
-        
+
         Ok(Self { options })
     }
 }
@@ -22,9 +24,9 @@ impl Wal2JsonDecoder {
 #[async_trait]
 impl Decoder for Wal2JsonDecoder {
     async fn decode(&self, data: &[u8]) -> Result<Option<ChangeEvent>> {
-        let json: Value = serde_json::from_slice(data)
-            .context("failed to parse wal2json message")?;
-        
+        let json: Value =
+            serde_json::from_slice(data).context("failed to parse wal2json message")?;
+
         let change = if let Some(change_array) = json.get("change").and_then(|v| v.as_array()) {
             if change_array.is_empty() {
                 return Ok(None);
@@ -35,28 +37,31 @@ impl Decoder for Wal2JsonDecoder {
         } else {
             return Ok(None);
         };
-        
-        let schema = change.get("schema")
+
+        let schema = change
+            .get("schema")
             .and_then(|v| v.as_str())
             .unwrap_or("public")
             .to_string();
-        
-        let table = change.get("table")
+
+        let table = change
+            .get("table")
             .and_then(|v| v.as_str())
             .context("missing table name")?
             .to_string();
-        
-        let kind = change.get("kind")
+
+        let kind = change
+            .get("kind")
             .and_then(|v| v.as_str())
             .context("missing operation kind")?;
-        
+
         let operation = match kind {
             "insert" => Operation::Insert,
             "update" => Operation::Update,
             "delete" => Operation::Delete,
             _ => anyhow::bail!("unknown operation kind: {}", kind),
         };
-        
+
         let lsn = if self.options.include_lsn {
             json.get("lsn")
                 .and_then(|v| v.as_str())
@@ -65,7 +70,7 @@ impl Decoder for Wal2JsonDecoder {
         } else {
             String::new()
         };
-        
+
         let timestamp = if self.options.include_timestamp {
             json.get("timestamp")
                 .and_then(|v| v.as_str())
@@ -74,35 +79,34 @@ impl Decoder for Wal2JsonDecoder {
         } else {
             None
         };
-        
-        let txid = json.get("xid")
-            .and_then(|v| v.as_i64());
-        
-        let before = change.get("oldkeys")
+
+        let txid = json.get("xid").and_then(|v| v.as_i64());
+
+        let before = change
+            .get("oldkeys")
             .and_then(|v| v.get("oldkeys"))
             .cloned();
-        
-        let after = change.get("columnnames")
-            .and_then(|names| {
-                change.get("columnvalues").and_then(|values| {
-                    if let (Some(names_arr), Some(values_arr)) = (names.as_array(), values.as_array()) {
-                        if names_arr.len() == values_arr.len() {
-                            let mut obj = serde_json::Map::new();
-                            for (name, value) in names_arr.iter().zip(values_arr.iter()) {
-                                if let Some(name_str) = name.as_str() {
-                                    obj.insert(name_str.to_string(), value.clone());
-                                }
+
+        let after = change.get("columnnames").and_then(|names| {
+            change.get("columnvalues").and_then(|values| {
+                if let (Some(names_arr), Some(values_arr)) = (names.as_array(), values.as_array()) {
+                    if names_arr.len() == values_arr.len() {
+                        let mut obj = serde_json::Map::new();
+                        for (name, value) in names_arr.iter().zip(values_arr.iter()) {
+                            if let Some(name_str) = name.as_str() {
+                                obj.insert(name_str.to_string(), value.clone());
                             }
-                            Some(Value::Object(obj))
-                        } else {
-                            None
                         }
+                        Some(Value::Object(obj))
                     } else {
                         None
                     }
-                })
-            });
-        
+                } else {
+                    None
+                }
+            })
+        });
+
         Ok(Some(ChangeEvent {
             schema,
             table,

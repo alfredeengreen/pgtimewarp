@@ -9,10 +9,10 @@ pub fn parse_pg_lsn(lsn: &str) -> Option<u64> {
     if parts.len() != 2 {
         return None;
     }
-    
+
     let high = parts[0].parse::<u64>().ok()?;
     let low = parts[1].parse::<u64>().ok()?;
-    
+
     Some((high << 32) | low)
 }
 
