@@ -1,34 +1,10 @@
-# Python
-__pycache__/
-*.py[cod]
-*$py.class
-*.so
-.Python
-build/
-develop-eggs/
-dist/
-downloads/
-eggs/
-.eggs/
-lib/
-lib64/
-parts/
-sdist/
-var/
-wheels/
-*.egg-info/
-.installed.cfg
-*.egg
-
-# Virtual Environment
-venv/
-env/
-ENV/
-.venv
+# Rust
+target/
+Cargo.lock
 
 # IDE
-.vscode/
 .idea/
+.vscode/
 *.swp
 *.swo
 *~
@@ -37,9 +13,12 @@ ENV/
 .DS_Store
 Thumbs.db
 
-# Environment variables
+# Environment
 .env
 .env.local
-
-# Logs
 *.log
+
+# Build artifacts
+*.o
+*.so
+*.dylib

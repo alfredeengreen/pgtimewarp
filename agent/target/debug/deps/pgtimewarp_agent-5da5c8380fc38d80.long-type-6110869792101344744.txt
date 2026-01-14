@@ -1,1 +1,0 @@
-tokio::sync::RwLockReadGuard<'_, std::option::Option<tokio_postgres::Client>>
