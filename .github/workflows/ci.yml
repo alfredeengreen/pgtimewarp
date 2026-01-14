@@ -114,7 +114,9 @@ jobs:
         wget --quiet -O - https://www.postgresql.org/media/keys/ACCC4CF8.asc | sudo gpg --dearmor -o /usr/share/keyrings/postgresql-keyring.gpg
         echo "deb [signed-by=/usr/share/keyrings/postgresql-keyring.gpg] http://apt.postgresql.org/pub/repos/apt/ $(lsb_release -cs)-pgdg main" | sudo tee /etc/apt/sources.list.d/pgdg.list
         sudo apt-get update
-        sudo apt-get install -y postgresql-server-dev-15
+        sudo apt-get install -y postgresql-server-dev-15 postgresql-15
+        # Ensure pg_config points to PostgreSQL 15
+        sudo update-alternatives --install /usr/bin/pg_config pg_config /usr/lib/postgresql/15/bin/pg_config 100
     
     - name: Build extension
       working-directory: ./ext
