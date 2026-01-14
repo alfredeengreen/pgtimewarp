@@ -21,7 +21,7 @@ pub async fn run(store: &Store, node: Option<&str>) -> Result<()> {
             let kind: String = row.get(0);
             let message: String = row.get(1);
             let ts: chrono::DateTime<chrono::Utc> = row.get(2);
-            println!("  [{}] {}: {} - {}", ts, kind, message, "");
+            println!("  [{}] {}: {}", ts, kind, message);
         }
     } else {
         let rows = client

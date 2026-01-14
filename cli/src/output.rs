@@ -1,9 +1,11 @@
 use serde_json::Value;
 
+#[allow(dead_code)]
 pub fn print_json(value: &Value) {
     println!("{}", serde_json::to_string_pretty(value).unwrap());
 }
 
+#[allow(dead_code)]
 pub fn print_table(headers: Vec<&str>, rows: Vec<Vec<String>>) {
     // Print headers
     println!("{}", headers.join(" | "));

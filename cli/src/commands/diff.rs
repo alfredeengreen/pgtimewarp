@@ -6,7 +6,7 @@ use serde_json::json;
 pub async fn run(
     store: &Store,
     table: &str,
-    pk: &str,
+    _pk: &str,
     from: &str,
     to: &str,
     node: &str,

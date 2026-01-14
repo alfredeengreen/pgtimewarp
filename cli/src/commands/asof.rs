@@ -3,7 +3,7 @@ use anyhow::Result;
 use chrono::DateTime;
 use serde_json::json;
 
-pub async fn run(store: &Store, table: &str, pk: &str, at: &str, node: &str) -> Result<()> {
+pub async fn run(store: &Store, table: &str, _pk: &str, at: &str, node: &str) -> Result<()> {
     let parts: Vec<&str> = table.split('.').collect();
     if parts.len() != 2 {
         anyhow::bail!("table must be in format schema.table");

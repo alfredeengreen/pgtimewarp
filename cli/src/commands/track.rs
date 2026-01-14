@@ -1,5 +1,5 @@
 use crate::store::Store;
-use anyhow::{Context, Result};
+use anyhow::Result;
 
 pub async fn run(store: &Store, table: &str, pk: &str, retention: u32, node: &str) -> Result<()> {
     let parts: Vec<&str> = table.split('.').collect();
