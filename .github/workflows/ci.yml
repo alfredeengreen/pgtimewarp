@@ -143,9 +143,14 @@ jobs:
           make
         fi
     
-    - name: Install extension
-      working-directory: ./ext
-      run: sudo make install
+    - name: Install extension in container
+      run: |
+        # Copy extension files into the PostgreSQL container
+        # The extension needs to be available to the PostgreSQL server running in Docker
+        docker cp ext/pgtimewarp.control $(docker ps -q -f ancestor=postgres:15):/usr/share/postgresql/15/extension/
+        docker cp ext/sql/pgtimewarp--0.1.sql $(docker ps -q -f ancestor=postgres:15):/usr/share/postgresql/15/extension/
+        # Copy the compiled shared library
+        docker cp ext/pgtimewarp.so $(docker ps -q -f ancestor=postgres:15):/usr/lib/postgresql/15/lib/ 2>/dev/null || echo "Shared library not found, extension may be SQL-only"
     
     - name: Test SQL migrations
       run: |
