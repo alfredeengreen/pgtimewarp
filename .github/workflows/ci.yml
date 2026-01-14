@@ -149,28 +149,40 @@ jobs:
         CONTAINER_ID=$(docker ps -q -f ancestor=postgres:15 | head -1)
         if [ -z "$CONTAINER_ID" ]; then
           echo "PostgreSQL container not found"
+          docker ps -a
           exit 1
         fi
         echo "Found PostgreSQL container: $CONTAINER_ID"
         # Verify source files exist
         echo "Checking source files:"
-        ls -la ext/pgtimewarp.control || echo "Control file not found"
-        ls -la ext/sql/pgtimewarp--0.1.sql || echo "SQL file not found"
+        ls -la ext/pgtimewarp.control || { echo "Control file not found"; exit 1; }
+        ls -la ext/sql/pgtimewarp--0.1.sql || { echo "SQL file not found"; exit 1; }
+        # Check PostgreSQL version in container
+        echo "PostgreSQL version in container:"
+        docker exec $CONTAINER_ID psql --version || echo "Could not get version"
+        # Determine PostgreSQL version and paths
+        PG_VERSION=$(docker exec $CONTAINER_ID psql -U postgres -tAc "SHOW server_version_num" 2>/dev/null | head -c 2 || echo "15")
+        echo "Detected PostgreSQL version: $PG_VERSION"
+        EXT_DIR="/usr/share/postgresql/$PG_VERSION/extension"
+        LIB_DIR="/usr/lib/postgresql/$PG_VERSION/lib"
         # Create directories in container
-        docker exec $CONTAINER_ID mkdir -p /usr/share/postgresql/15/extension
-        docker exec $CONTAINER_ID mkdir -p /usr/lib/postgresql/15/lib
+        docker exec $CONTAINER_ID mkdir -p $EXT_DIR
+        docker exec $CONTAINER_ID mkdir -p $LIB_DIR
         # Copy extension files into the PostgreSQL container
-        docker cp ext/pgtimewarp.control $CONTAINER_ID:/usr/share/postgresql/15/extension/ || { echo "Failed to copy control file"; exit 1; }
-        docker cp ext/sql/pgtimewarp--0.1.sql $CONTAINER_ID:/usr/share/postgresql/15/extension/ || { echo "Failed to copy SQL file"; exit 1; }
+        echo "Copying control file..."
+        docker cp ext/pgtimewarp.control $CONTAINER_ID:$EXT_DIR/ || { echo "Failed to copy control file"; exit 1; }
+        echo "Copying SQL file..."
+        docker cp ext/sql/pgtimewarp--0.1.sql $CONTAINER_ID:$EXT_DIR/ || { echo "Failed to copy SQL file"; exit 1; }
         # Copy the compiled shared library if it exists
         if [ -f ext/pgtimewarp.so ]; then
-          docker cp ext/pgtimewarp.so $CONTAINER_ID:/usr/lib/postgresql/15/lib/ || echo "Failed to copy shared library"
+          echo "Copying shared library..."
+          docker cp ext/pgtimewarp.so $CONTAINER_ID:$LIB_DIR/ || echo "Failed to copy shared library"
         else
           echo "Shared library not found, extension may be SQL-only"
         fi
         # Verify files were copied
-        echo "Files in container:"
-        docker exec $CONTAINER_ID ls -la /usr/share/postgresql/15/extension/ | grep pgtimewarp || echo "No pgtimewarp files found"
+        echo "Files in container extension directory:"
+        docker exec $CONTAINER_ID ls -la $EXT_DIR/ | grep pgtimewarp || { echo "No pgtimewarp files found"; exit 1; }
     
     - name: Test SQL migrations
       run: |
