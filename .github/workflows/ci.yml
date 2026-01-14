@@ -115,12 +115,18 @@ jobs:
         echo "deb [signed-by=/usr/share/keyrings/postgresql-keyring.gpg] http://apt.postgresql.org/pub/repos/apt/ $(lsb_release -cs)-pgdg main" | sudo tee /etc/apt/sources.list.d/pgdg.list
         sudo apt-get update
         sudo apt-get install -y postgresql-server-dev-15 postgresql-15
-        # Ensure pg_config points to PostgreSQL 15
-        sudo update-alternatives --install /usr/bin/pg_config pg_config /usr/lib/postgresql/15/bin/pg_config 100
+        # Find the correct pg_config path for PostgreSQL 15
+        PG15_CONFIG=$(find /usr -name pg_config -path "*/postgresql/15/*" 2>/dev/null | head -1)
+        if [ -n "$PG15_CONFIG" ]; then
+          sudo update-alternatives --install /usr/bin/pg_config pg_config "$PG15_CONFIG" 100
+          sudo update-alternatives --set pg_config "$PG15_CONFIG"
+        fi
+        # Verify pg_config version
+        pg_config --version
     
     - name: Build extension
       working-directory: ./ext
-      run: make
+      run: make PG_CONFIG=$(which pg_config)
     
     - name: Install extension
       working-directory: ./ext
