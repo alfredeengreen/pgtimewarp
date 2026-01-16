@@ -1,0 +1,2 @@
+-- Needed for xxhash/xxh3 in app layer; not required in DB.
+-- Keep empty unless you want optional helpers later.

@@ -15,8 +15,9 @@ CREATE DATABASE pgtimewarp;
 ```bash
 psql -d pgtimewarp -f migrations/001_init.sql
 psql -d pgtimewarp -f migrations/002_indexes.sql
-psql -d pgtimewarp -f migrations/003_roles_grants.sql
-psql -d pgtimewarp -f migrations/004_retention.sql
+psql -d pgtimewarp -f migrations/003_triggers.sql
+psql -d pgtimewarp -f migrations/004_roles_grants.sql
+psql -d pgtimewarp -f migrations/005_retention.sql
 ```
 
 Or run all migrations:
@@ -30,8 +31,8 @@ done
 ## Schema overview
 
 - `nodes`: Agent instance registry and health tracking
-- `tracked_relations`: Explicit allowlist of tracked tables with primary key (node_id, schema_name, table_name)
-- `row_versions`: Historical row states with LSN-based validity intervals
+- `tracked_relations`: Explicit allowlist of tracked tables with stable `id` and unique (node_id, schema_name, table_name)
+- `row_versions`: Historical row states keyed by `tracked_id` with LSN-based validity intervals
 - `lsn_time_map`: Timestamp to LSN mappings for as-of query resolution
 - `wal_checkpoints`: WAL consumption state for safe resume
 - `health_events`: Diagnostic events and monitoring data
@@ -44,14 +45,28 @@ done
 
 ## Retention
 
-Retention is managed per relation via the `retention_hours` column in `tracked_relations`. The `retention_run()` function processes all active relations, and `retention_delete_batch()` handles throttled deletion for a specific relation.
+Retention is managed per relation via the `retention_hours` column in `tracked_relations`. The `retention_run` procedure processes all active relations, and `retention_delete_batch` handles throttled deletion for a specific relation.
 
 Run retention manually:
 
 ```sql
-SELECT * FROM pgtimewarp.retention_run('node-id', 1000, '5 minutes'::interval);
+CALL pgtimewarp.retention_run('node-id', 1000, 300);
 ```
 
 ## Maintenance
 
 The schema is designed for high write throughput. Consider partitioning `row_versions` by time for very large deployments. BRIN indexes are provided for efficient retention scans.
+
+## Demo tests
+
+Run a small demo script against the store database:
+
+```bash
+psql -d pgtimewarp -f tests/demo.sql
+```
+
+Optional: show index usage for an as-of lookup:
+
+```bash
+psql -d pgtimewarp -f tests/explain_demo.sql
+```
